@@ -6,7 +6,7 @@ I'm passionate about cybersecurity and love tackling complex challenges through 
 ## ⚠️ Vulnerability Management Projects
 
 - **[Vulnerability Management Program Implementation](https://github.com/KennethGates/Vulnerability-Management-program/tree/main)**
-- **[Programmatic Vulnerability Remediations (PowerShell and BASH)](https://github.com/joshcybertest/programmatic-vulnerability-remediations)**
+- **[Programmatic Vulnerability Remediations of STIGS (PowerShell and BASH)](https://github.com/KennethGates/KennethGates/edit/main/README.md)**
 
 ## 🚨 Threat Hunting and Security Operations
 
