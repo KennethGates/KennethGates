@@ -1,0 +1,64 @@
+ <#
+.SYNOPSIS
+    This PowerShell script sets the UAC policy ConsentPromptBehaviorUser (REG_DWORD) to 0 under, which automatically denies elevation requests for standard users
+
+.NOTES
+    Author          : Kenneth Gates
+    LinkedIn        : www.linkedin.com/in/kenneth-gates-224745365
+    GitHub          : https://github.com/KennethGates
+    Date Created    : 2025-08-28
+    Last Modified   : 2025-08-28
+    Version         : 1.0
+    CVEs            : N/A
+    Plugin IDs      : N/A
+    STIG-ID         : WN10-SO-000255
+
+.TESTED ON
+    Date(s) Tested  : 
+    Tested By       : 
+    Systems Tested  : 
+    PowerShell Ver. : 
+
+.USAGE
+    Put any usage instructions here.
+    Example syntax:
+    PS C:\> .\STIG-ID-WN10-SO-000255-.ps1 
+#>
+
+
+.SYNOPSIS
+Sets HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System\ConsentPromptBehaviorUser (REG_DWORD) to 0.
+#>
+
+$RegPath = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System"
+$Name    = "ConsentPromptBehaviorUser"
+$Value   = 0
+
+# --- Require Admin ---
+$wi = [Security.Principal.WindowsIdentity]::GetCurrent()
+$wp = New-Object Security.Principal.WindowsPrincipal($wi)
+if (-not $wp.IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator)) {
+    throw "Run PowerShell as Administrator."
+}
+
+# --- Ensure key exists ---
+if (-not (Test-Path $RegPath)) {
+    New-Item -Path $RegPath -Force | Out-Null
+}
+
+# --- Read current and set if needed ---
+try {
+    $current = (Get-ItemProperty -Path $RegPath -Name $Name -ErrorAction Stop).$Name
+} catch {
+    $current = $null
+}
+
+if ($current -ne $Value) {
+    New-ItemProperty -Path $RegPath -Name $Name -Value $Value -PropertyType DWord -Force | Out-Null
+    Write-Host "Set $Name to $Value (REG_DWORD) under $RegPath"
+} else {
+    Write-Host "Already compliant: $Name = $Value"
+}
+
+Write-Host "Tip: A reboot or 'gpupdate /target:computer /force' may help the change take full effect."
+ 
