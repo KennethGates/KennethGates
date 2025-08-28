@@ -25,7 +25,7 @@
     PS C:\> .\STIG-ID-WN10-CC-000155.ps1 
 #>
 
-# YOUR CODE GOES HERE<# 
+ 
   Apply RDP/Remote Assistance + USB redirection policy registry values
   Paths:
     HKLM\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services
