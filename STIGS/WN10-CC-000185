@@ -1,0 +1,65 @@
+ <#
+.SYNOPSIS
+    This PowerShell script disables Windows AutoRun by setting
+
+.NOTES
+    Author          : Kenneth Gates
+    LinkedIn        : www.linkedin.com/in/kenneth-gates-224745365
+    GitHub          : https://github.com/KennethGates
+    Date Created    : 2025-08-28
+    Last Modified   : 2025-08-28
+    Version         : 1.0
+    CVEs            : N/A
+    Plugin IDs      : N/A
+    STIG-ID         : WN10-CC-000185
+
+.TESTED ON
+    Date(s) Tested  : 
+    Tested By       : 
+    Systems Tested  : 
+    PowerShell Ver. : 
+
+.USAGE
+    Put any usage instructions here.
+    Example syntax:
+    PS C:\> .\STIG-ID-WN10-CC-000185.ps1 
+#>
+#
+.SYNOPSIS
+Disables AutoRun system-wide by setting:
+HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer\NoAutorun = 1 (REG_DWORD).
+#>
+
+# --- Config ---
+$RegPath = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer"
+$Name    = "NoAutorun"
+$Value   = 1  # 1 = Disable AutoRun
+
+# --- Require Admin ---
+$wi = [Security.Principal.WindowsIdentity]::GetCurrent()
+$wp = New-Object Security.Principal.WindowsPrincipal($wi)
+if (-not $wp.IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator)) {
+    throw "Run PowerShell as Administrator."
+}
+
+# --- Ensure key exists ---
+if (-not (Test-Path $RegPath)) {
+    New-Item -Path $RegPath -Force | Out-Null
+}
+
+# --- Read current and set if needed ---
+try {
+    $current = (Get-ItemProperty -Path $RegPath -Name $Name -ErrorAction Stop).$Name
+} catch {
+    $current = $null
+}
+
+if ($current -ne $Value) {
+    New-ItemProperty -Path $RegPath -Name $Name -Value $Value -PropertyType DWord -Force | Out-Null
+    Write-Host "Set $Name to $Value (REG_DWORD) under $RegPath"
+} else {
+    Write-Host "Already compliant: $Name = $Value"
+}
+
+Write-Host "Note: You may need to log off/restart for all shells to honor the change."
+ 
