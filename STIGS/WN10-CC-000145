@@ -1,0 +1,138 @@
+ <#
+.SYNOPSIS
+    This PowerShell script enforces the relevant Windows power policy by creating and setting DCSettingIndex (REF_DWORD) to 1 under
+
+.NOTES
+    Author          : Kenneth Gates
+    LinkedIn        : www.linkedin.com/in/kenneth-gates-224745365
+    GitHub          : https://github.com/KennethGates
+    Date Created    : 2025-08-28
+    Last Modified   : 2025-08-28
+    Version         : 1.0
+    CVEs            : N/A
+    Plugin IDs      : N/A
+    STIG-ID         : WN10-CC-000145
+
+.TESTED ON
+    Date(s) Tested  : 
+    Tested By       : 
+    Systems Tested  : 
+    PowerShell Ver. : 
+
+.USAGE
+    Put any usage instructions here.
+    Example syntax:
+    PS C:\> .\STIG-ID-WN10-CC-000145.ps1 
+#>
+
+.SYNOPSIS
+Checks and remediates the local Account Lockout Policy so that:
+- Account lockout threshold is 3 (finding if 0 or > 3)
+- Lockout duration = 15 minutes
+- Reset account lockout counter after = 15 minutes
+
+.DESCRIPTION
+Exports current security policy with secedit, evaluates for finding, and if non-compliant,
+remediates using native 'net accounts' commands (Windows 10+). Requires administrator.
+#>
+
+#--- Config (desired secure values) ---
+$DesiredThreshold = 3       # Attempts (1-3 is acceptable; we enforce 3)
+$DesiredDuration  = 15      # Minutes
+$DesiredWindow    = 15      # Minutes
+
+function Test-Admin {
+    $id = [Security.Principal.WindowsIdentity]::GetCurrent()
+    $p  = New-Object Security.Principal.WindowsPrincipal($id)
+    if (-not $p.IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator)) {
+        throw "Run PowerShell as Administrator."
+    }
+}
+
+function Get-AccountLockoutPolicy {
+    # Export current local security policy
+    $cfg = Join-Path $env:TEMP "secpol_export.inf"
+    secedit /export /cfg "$cfg" *>$null
+
+    if (-not (Test-Path $cfg)) { throw "Failed to export security policy with secedit." }
+
+    $raw = Get-Content $cfg -ErrorAction Stop
+
+    # Defaults if not present
+    $result = [ordered]@{
+        LockoutBadCount     = $null  # 0 means 'Not defined' or 'No lockout'
+        LockoutDuration     = $null  # minutes
+        ResetLockoutCount   = $null  # minutes
+        SourceFile          = $cfg
+    }
+
+    foreach ($line in $raw) {
+        if ($line -match '^\s*LockoutBadCount\s*=\s*(\d+)\s*$')      { $result.LockoutBadCount   = [int]$Matches[1] }
+        elseif ($line -match '^\s*LockoutDuration\s*=\s*(\d+)\s*$')  { $result.LockoutDuration   = [int]$Matches[1] }
+        elseif ($line -match '^\s*ResetLockoutCount\s*=\s*(\d+)\s*$'){ $result.ResetLockoutCount = [int]$Matches[1] }
+    }
+
+    [pscustomobject]$result
+}
+
+function Set-AccountLockoutPolicy {
+    param(
+        [int]$Threshold,
+        [int]$DurationMinutes,
+        [int]$WindowMinutes
+    )
+    # Use native net.exe to set all three cohesively
+    & net accounts /lockoutthreshold:$Threshold /lockoutduration:$DurationMinutes /lockoutwindow:$WindowMinutes | Out-Null
+    if ($LASTEXITCODE -ne 0) {
+        throw "Failed to set account lockout policy with 'net accounts'."
+    }
+}
+
+try {
+    Test-Admin
+
+    $before = Get-AccountLockoutPolicy
+
+    # Determine finding: threshold 0 or > 3
+    $threshold = $before.LockoutBadCount
+    $isFinding = ($null -eq $threshold) -or ($threshold -eq 0) -or ($threshold -gt 3)
+
+    Write-Host "Current policy:"
+    Write-Host "  Threshold: $($before.LockoutBadCount) attempts"
+    Write-Host "  Duration : $($before.LockoutDuration) minutes"
+    Write-Host "  Reset    : $($before.ResetLockoutCount) minutes"
+    Write-Host ""
+
+    if ($isFinding) {
+        Write-Warning "Finding: Account lockout threshold is 0 or greater than 3. Remediating to Threshold=$DesiredThreshold, Duration=$DesiredDuration, Reset=$DesiredWindow..."
+        Set-AccountLockoutPolicy -Threshold $DesiredThreshold -DurationMinutes $DesiredDuration -WindowMinutes $DesiredWindow
+    } else {
+        Write-Host "✅ No finding: Threshold is within 1–3 attempts. Ensuring duration/reset are set to $DesiredDuration minutes..."
+        # Still standardize duration/reset to desired values if they differ
+        if (($before.LockoutDuration -ne $DesiredDuration) -or ($before.ResetLockoutCount -ne $DesiredWindow)) {
+            Set-AccountLockoutPolicy -Threshold $threshold -DurationMinutes $DesiredDuration -WindowMinutes $DesiredWindow
+        }
+    }
+
+    $after = Get-AccountLockoutPolicy
+    Write-Host ""
+    Write-Host "Post-check policy:"
+    Write-Host "  Threshold: $($after.LockoutBadCount) attempts"
+    Write-Host "  Duration : $($after.LockoutDuration) minutes"
+    Write-Host "  Reset    : $($after.ResetLockoutCount) minutes"
+
+    if (($after.LockoutBadCount -eq $DesiredThreshold) -and
+        ($after.LockoutDuration -eq $DesiredDuration) -and
+        ($after.ResetLockoutCount -eq $DesiredWindow)) {
+        Write-Host "`n🎯 Compliant and standardized."
+    } else {
+        Write-Warning "`nPolicy not fully standardized. Double-check local policy UI or rerun with admin."
+    }
+
+} catch {
+    Write-Error $_.Exception.Message
+    exit 1
+}
+
+
+ 
