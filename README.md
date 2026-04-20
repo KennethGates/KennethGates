@@ -29,6 +29,7 @@ the way a security team actually operates.
 ## 🔑 Identity & Access Management
 
 - [Cloud IAM Help Desk Lab (Microsoft Entra ID)](https://github.com/KennethGates/cloud-iam-helpdesk-lab)
+- [Conditional Access Policy Lab (Microsoft Entra ID)](https://github.com/KennethGates/azure-iam-conditional-access-lab)
 
 ---
 
