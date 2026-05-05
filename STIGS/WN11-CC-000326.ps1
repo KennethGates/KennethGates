@@ -7,7 +7,7 @@
 # SRG:              SRG-OS-000062-GPOS-00031
 #
 # Title:
-#   Create WN11-CC-000326.ps1
+#   PowerShell script block logging must be enabled on Windows 11.
 #
 # Summary:
 #   Enabling PowerShell script block logging records detailed information from
