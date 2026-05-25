@@ -31,6 +31,7 @@ the way a security team actually operates.
 - [Cloud IAM Help Desk Lab (Microsoft Entra ID)](https://github.com/KennethGates/cloud-iam-helpdesk-lab)
 - [Conditional Access Policy Lab (Microsoft Entra ID)](https://github.com/KennethGates/azure-iam-conditional-access-lab)
 - [Identity Lifecycle Automation — Joiner–Mover–Leaver (Python + Microsoft Graph API)](https://github.com/KennethGates/identity-lifecycle-automation)
+- [Okta IAM Security Lab — OIDC, Adaptive MFA, RBAC (Auth0 by Okta)](https://github.com/KennethGates/okta-iam-lab)
 ---
 
 ## 🔗 Connect With Me
