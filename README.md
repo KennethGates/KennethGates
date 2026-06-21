@@ -23,7 +23,7 @@ the way a security team actually operates.
 ## 🚨 Threat Hunting and Security Operations
 
 - [Threat Hunting Scenario (Tor Browser Usage)](https://github.com/KennethGates/Threat-hunting-scenario-Tor)
-- [Threat Hunt: RDP Compromise (Josh Madakor Cyber Range CTF — 10/10 Flags)](https://github.com/KennethGates/Threat-Hunt-RDP-Compromise)
+- [Threat Hunt: RDP Compromise ](https://github.com/KennethGates/Threat-Hunt-RDP-Compromise)
 ---
 
 ## 🔑 Identity & Access Management
